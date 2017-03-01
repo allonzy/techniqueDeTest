@@ -84,28 +84,44 @@ class Profile {
         $memoryUsages = array();
 
 		for($i = 0; $i < $invocations; $i++) {
+            // Mémoire avant la méthode
+            $memoryStart = memory_get_usage(true);
+
 			$start = microtime(true);
             $method->invokeArgs($instance, $methodargs);
 			$durations[] = microtime(true) - $start;
 
+            // Mémoire maximale après la méthode
+            $memoryPeak = memory_get_peak_usage(true);
+
             // Différence de mémoire avant et après l'exécution
-            //$memoryUsages[] = memory_get_peak_usage(true);
+            $memoryUsages[] = $memoryPeak - $memoryStart;
 		}
 
 		$duration['total'] = round(array_sum($durations), 4);
 		$duration['average'] = round($duration['total'] / count($durations), 4);
 		$duration['worst'] = round(max($durations), 4);
 
-
         // Ecart-type
         $duration['standard_deviation'] = $this->ecarttype($durations, 6);
+
+
+        // Calculs sur la mémoire
+        $memory['total'] = round(array_sum($memoryUsages), 4);
+		$memory['average'] = round($memoryUsages['total'] / count($memoryUsages), 4);
+		$memory['worst'] = round(max($memoryUsages), 4);
+
+        // Ecart-type
+        $memory['standard_deviation'] = $this->ecarttype($memoryUsages, 6);
+
 
 
 		$this->details = array(	'class' => $classname,
 							   	'method' => $methodname,
 							   	'arguments' => $methodargs,
 						 		'duration' => $duration,
-								'invocations' => $invocations);
+								'invocations' => $invocations,
+						 		'memory' => $memory);
 
 		return $duration['average'];
 	}
@@ -136,6 +152,12 @@ class Profile {
 			echo "Average duration: {$this->details['duration']['average']}s\n";
 			echo "Worst duration:   {$this->details['duration']['worst']}s\n";
             echo "Standard deviation:   {$this->details['duration']['standard_deviation']}s\n";
+
+            echo "MEMORY:\n";
+			echo "Total duration:   {$this->details['memory']['total']}s\n";
+			echo "Average duration: {$this->details['memory']['average']}s\n";
+			echo "Worst duration:   {$this->details['memory']['worst']}s\n";
+            echo "Standard deviation:   {$this->details['memory']['standard_deviation']}s\n";
 		}
 	}
 }
